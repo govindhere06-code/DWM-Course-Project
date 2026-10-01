@@ -1,11 +1,17 @@
 # Usage: make <target>   (on Windows: mingw32-make <target>)
+# backend/  -> ML pipeline (src, data, models, reports, notebooks, tests)
+# frontend/ -> Streamlit dashboard
 ifeq ($(OS),Windows_NT)
-    PYTHON := .venv/Scripts/python.exe
+    VENV_PY := .venv/Scripts/python.exe
     BOOTSTRAP := py -3.13
 else
-    PYTHON := .venv/bin/python
+    VENV_PY := .venv/bin/python
     BOOTSTRAP := python3
 endif
+
+ROOT := $(CURDIR)
+PYTHON := "$(ROOT)/$(VENV_PY)"
+BACKEND := cd backend &&
 
 .PHONY: install eda train tune evaluate explain dashboard test all
 
@@ -15,24 +21,24 @@ install:
 	$(PYTHON) -m pip install -r requirements.txt
 
 eda:
-	$(PYTHON) -m src.eda
+	$(BACKEND) $(PYTHON) -m src.eda
 
 train:
-	$(PYTHON) -m src.train
+	$(BACKEND) $(PYTHON) -m src.train
 
 tune:
-	$(PYTHON) -m src.tune
+	$(BACKEND) $(PYTHON) -m src.tune
 
 evaluate:
-	$(PYTHON) -m src.evaluate
+	$(BACKEND) $(PYTHON) -m src.evaluate
 
 explain:
-	$(PYTHON) -m src.explain
+	$(BACKEND) $(PYTHON) -m src.explain
 
 dashboard:
-	$(PYTHON) -m streamlit run dashboard/app.py
+	$(PYTHON) -m streamlit run frontend/app.py
 
 test:
-	$(PYTHON) -m pytest -q
+	$(BACKEND) $(PYTHON) -m pytest -q
 
 all: install eda train tune evaluate explain
