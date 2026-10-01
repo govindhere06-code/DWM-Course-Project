@@ -1,0 +1,9 @@
+feature,r_squared,vif,concern
+NumOfProducts,0.094,1.103,low
+Balance,0.094,1.103,low
+IsActiveMember,0.009,1.009,low
+Age,0.009,1.009,low
+Tenure,0.002,1.002,low
+HasCrCard,0.001,1.001,low
+CreditScore,0.001,1.001,low
+EstimatedSalary,0.001,1.001,low

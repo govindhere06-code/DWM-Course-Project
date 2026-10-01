@@ -1,0 +1,5 @@
+feature,q1,q3,iqr,lower_fence,upper_fence,n_below,n_above,n_outliers,pct_outliers
+CreditScore,584.0,718.0,134.0,383.0,919.0,15,0,15,0.15
+Age,32.0,44.0,12.0,14.0,62.0,0,359,359,3.59
+Balance,0.0,127644.24,127644.24,-191466.36,319110.6,0,0,0,0.0
+EstimatedSalary,51002.11,149388.25,98386.14,-96577.1,296967.45,0,0,0,0.0

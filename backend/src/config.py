@@ -32,6 +32,10 @@ DISCRETE_COLS = ["Tenure", "NumOfProducts"]
 CONTINUOUS_COLS = ["CreditScore", "Age", "Balance", "EstimatedSalary"]
 NUMERIC_COLS = CONTINUOUS_COLS + DISCRETE_COLS
 
+# Short aliases used in TICKETS.md.
+CAT_COLS = CATEGORICAL_COLS
+NUM_COLS = NUMERIC_COLS
+
 # Raw feature columns a scoring request must provide (IDs optional).
 FEATURE_COLS = [
     "CreditScore", "Geography", "Gender", "Age", "Tenure", "Balance",
