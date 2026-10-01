@@ -1,4 +1,5 @@
 """Central configuration: paths, constants and column groups."""
+
 from pathlib import Path
 
 # ---------------------------------------------------------------- paths
@@ -38,8 +39,16 @@ NUM_COLS = NUMERIC_COLS
 
 # Raw feature columns a scoring request must provide (IDs optional).
 FEATURE_COLS = [
-    "CreditScore", "Geography", "Gender", "Age", "Tenure", "Balance",
-    "NumOfProducts", "HasCrCard", "IsActiveMember", "EstimatedSalary",
+    "CreditScore",
+    "Geography",
+    "Gender",
+    "Age",
+    "Tenure",
+    "Balance",
+    "NumOfProducts",
+    "HasCrCard",
+    "IsActiveMember",
+    "EstimatedSalary",
 ]
 
 # ------------------------------------------------------- risk banding

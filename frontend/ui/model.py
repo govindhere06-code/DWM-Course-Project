@@ -1,4 +1,5 @@
 """Cached model outputs for the performance / prediction pages."""
+
 from __future__ import annotations
 
 import pandas as pd
@@ -14,15 +15,24 @@ RESULT_FILES = {
     "Tuning": "tuning_results.csv",
     "Ensembles": "ensemble_comparison.csv",
 }
-METRIC_COLS = {"pr_auc_mean": "PR-AUC", "roc_auc_mean": "ROC-AUC", "recall_mean": "Recall",
-               "precision_mean": "Precision", "f1_mean": "F1", "accuracy_mean": "Accuracy"}
+METRIC_COLS = {
+    "pr_auc_mean": "PR-AUC",
+    "roc_auc_mean": "ROC-AUC",
+    "recall_mean": "Recall",
+    "precision_mean": "Precision",
+    "f1_mean": "F1",
+    "accuracy_mean": "Accuracy",
+}
 
 
 def model_ready() -> bool:
     pipeline, _ = load_model()
     if pipeline is None:
-        st.warning("No trained model found. Run `python -m src.evaluate` in `backend/` "
-                   "(or `make evaluate`) and reload.", icon=":material/warning:")
+        st.warning(
+            "No trained model found. Run `python -m src.evaluate` in `backend/` "
+            "(or `make evaluate`) and reload.",
+            icon=":material/warning:",
+        )
         return False
     return True
 
@@ -44,8 +54,19 @@ def results_table(name: str) -> pd.DataFrame | None:
     if not path.exists():
         return None
     df = pd.read_csv(path)
-    keep = [c for c in ["model", "type", "strategy", "selected", "kept_defaults",
-                        "baseline_pr_auc", "tuned_pr_auc"] if c in df.columns]
+    keep = [
+        c
+        for c in [
+            "model",
+            "type",
+            "strategy",
+            "selected",
+            "kept_defaults",
+            "baseline_pr_auc",
+            "tuned_pr_auc",
+        ]
+        if c in df.columns
+    ]
     view = df[keep].copy()
     for col, label in METRIC_COLS.items():
         if col in df.columns:

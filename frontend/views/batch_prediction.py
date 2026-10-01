@@ -1,4 +1,5 @@
 """Batch Prediction: upload a CSV, score every customer, download the results."""
+
 import streamlit as st
 from sklearn.metrics import average_precision_score, roc_auc_score
 
@@ -10,16 +11,21 @@ from ui.data import load_metadata
 from ui.model import model_ready
 
 st.title("Batch Prediction")
-st.caption("Upload customers in the raw CSV format (same columns as `Churn_Modelling.csv`). "
-           "ID columns and `Exited` are optional.")
+st.caption(
+    "Upload customers in the raw CSV format (same columns as `Churn_Modelling.csv`). "
+    "ID columns and `Exited` are optional."
+)
 
 if model_ready():
     meta = load_metadata()
     up_col, sample_col = st.columns([3, 1], vertical_alignment="bottom")
     uploaded = up_col.file_uploader("Customer CSV", type="csv")
-    if sample_col.button("Use sample: test.csv", width="stretch",
-                         help="Score the 2,000-customer held-out test set"):
+    if sample_col.button(
+        "Use sample: test.csv", width="stretch", help="Score the 2,000-customer held-out test set"
+    ):
         st.session_state["batch_source"] = ("test.csv", TEST_DATA.read_bytes())
+    if st.query_params.get("sample") == "1" and "batch_source" not in st.session_state:
+        st.session_state["batch_source"] = ("test.csv", TEST_DATA.read_bytes())  # demo link
     if uploaded is not None:
         st.session_state["batch_source"] = (uploaded.name, uploaded.getvalue())
 
@@ -36,8 +42,11 @@ if model_ready():
             n_high = int((scored["risk_band"] == "High").sum())
             k = st.columns(4)
             k[0].metric("Customers scored", f"{len(scored):,}")
-            k[1].metric("Predicted churners", f"{int(scored['churn_prediction'].sum()):,}",
-                        help=f"Probability ≥ threshold {meta['threshold']}")
+            k[1].metric(
+                "Predicted churners",
+                f"{int(scored['churn_prediction'].sum()):,}",
+                help=f"Probability ≥ threshold {meta['threshold']}",
+            )
             k[2].metric("High risk", f"{n_high:,}")
             k[3].metric("Mean churn probability", f"{scored['churn_probability'].mean():.1%}")
 
@@ -46,17 +55,27 @@ if model_ready():
             with table:
                 display = scored[NEW_COLS + [c for c in scored.columns if c not in NEW_COLS]]
                 st.dataframe(
-                    display, width="stretch", hide_index=True, height=360,
+                    display,
+                    width="stretch",
+                    hide_index=True,
+                    height=360,
                     column_config={
                         "churn_probability": st.column_config.ProgressColumn(
-                            "Churn probability", format="percent", min_value=0, max_value=1),
+                            "Churn probability", format="percent", min_value=0, max_value=1
+                        ),
                         "churn_prediction": st.column_config.CheckboxColumn("Predicted churn"),
                         "risk_band": st.column_config.TextColumn("Risk band"),
-                    })
+                    },
+                )
             stem = name.rsplit(".", 1)[0]
-            st.download_button("Download scored CSV", to_csv_bytes(scored),
-                               file_name=f"{stem}_scored.csv", mime="text/csv",
-                               icon=":material/download:", type="primary")
+            st.download_button(
+                "Download scored CSV",
+                to_csv_bytes(scored),
+                file_name=f"{stem}_scored.csv",
+                mime="text/csv",
+                icon=":material/download:",
+                type="primary",
+            )
 
             if TARGET in scored.columns and scored[TARGET].nunique() == 2:
                 st.divider()

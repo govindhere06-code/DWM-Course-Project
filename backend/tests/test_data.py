@@ -64,8 +64,16 @@ def test_bad_target_raises(raw):
 
 @pytest.mark.parametrize(
     "col, value",
-    [("Age", 17), ("Age", 101), ("CreditScore", 299), ("CreditScore", 901),
-     ("NumOfProducts", 0), ("NumOfProducts", 5), ("Tenure", -1), ("Tenure", 11)],
+    [
+        ("Age", 17),
+        ("Age", 101),
+        ("CreditScore", 299),
+        ("CreditScore", 901),
+        ("NumOfProducts", 0),
+        ("NumOfProducts", 5),
+        ("Tenure", -1),
+        ("Tenure", 11),
+    ],
 )
 def test_out_of_range_raises(raw, col, value):
     df = raw.copy()

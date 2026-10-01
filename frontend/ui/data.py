@@ -1,4 +1,5 @@
 """Cached data / model access. All heavy lifting is delegated to backend `src`."""
+
 from __future__ import annotations
 
 import json
@@ -14,10 +15,27 @@ from src.features import AGE_BINS, AGE_LABELS
 # Columns offered in the explorer (identifiers excluded: no analytical meaning).
 ID_COLS = ["RowNumber", "CustomerId", "Surname"]
 CONTINUOUS = ["CreditScore", "Age", "Balance", "EstimatedSalary"]
-CATEGORICAL = ["Geography", "Gender", "AgeGroup", "NumOfProducts", "Tenure",
-               "HasCrCard", "IsActiveMember", "BalanceZero"]
-NUMERIC_FOR_CORR = ["CreditScore", "Age", "Tenure", "Balance", "NumOfProducts",
-                    "HasCrCard", "IsActiveMember", "EstimatedSalary", "Exited"]
+CATEGORICAL = [
+    "Geography",
+    "Gender",
+    "AgeGroup",
+    "NumOfProducts",
+    "Tenure",
+    "HasCrCard",
+    "IsActiveMember",
+    "BalanceZero",
+]
+NUMERIC_FOR_CORR = [
+    "CreditScore",
+    "Age",
+    "Tenure",
+    "Balance",
+    "NumOfProducts",
+    "HasCrCard",
+    "IsActiveMember",
+    "EstimatedSalary",
+    "Exited",
+]
 LABELS = {0: "Retained", 1: "Churned"}
 
 
@@ -25,8 +43,9 @@ LABELS = {0: "Retained", 1: "Churned"}
 def load_customers() -> pd.DataFrame:
     """Raw dataset plus a few display columns (AgeGroup, BalanceZero, Status)."""
     df = load_raw()
-    df["AgeGroup"] = pd.Categorical(pd.cut(df["Age"], bins=AGE_BINS, labels=AGE_LABELS),
-                                    categories=AGE_LABELS, ordered=True)
+    df["AgeGroup"] = pd.Categorical(
+        pd.cut(df["Age"], bins=AGE_BINS, labels=AGE_LABELS), categories=AGE_LABELS, ordered=True
+    )
     df["BalanceZero"] = (df["Balance"] == 0).astype(int)
     df["Status"] = df["Exited"].map(LABELS)
     return df

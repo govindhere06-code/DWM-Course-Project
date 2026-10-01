@@ -72,17 +72,24 @@ def test_balanced_gradient_boosting_upweights_minority():
 
 
 def test_pick_strategy_prefers_recall_within_tie_band():
-    group = pd.DataFrame({
-        "pr_auc_mean": [0.698, 0.692, 0.650],
-        "recall_mean": [0.46, 0.73, 0.90],
-    })
+    group = pd.DataFrame(
+        {
+            "pr_auc_mean": [0.698, 0.692, 0.650],
+            "recall_mean": [0.46, 0.73, 0.90],
+        }
+    )
     assert pick_strategy(group) == 1  # 0.692 ties with 0.698; 0.650 is out of the band
 
 
-@pytest.mark.parametrize("name, strategy", [
-    ("GradientBoosting", "class_weight"), ("LightGBM", "class_weight"),
-    ("XGBoost", "smote"), ("RandomForest", "smoteenn"),
-])
+@pytest.mark.parametrize(
+    "name, strategy",
+    [
+        ("GradientBoosting", "class_weight"),
+        ("LightGBM", "class_weight"),
+        ("XGBoost", "smote"),
+        ("RandomForest", "smoteenn"),
+    ],
+)
 def test_search_space_keys_are_valid_params(name, strategy):
     pipe = make_pipeline(name, strategy, PW)
     valid = pipe.get_params().keys()

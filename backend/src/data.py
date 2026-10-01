@@ -1,4 +1,5 @@
 """Load, validate, clean and split the raw churn dataset."""
+
 from pathlib import Path
 
 import pandas as pd
@@ -75,9 +76,7 @@ def validate(df: pd.DataFrame) -> dict:
     }
     if bad_dtypes:
         expected = {c: EXPECTED_SCHEMA[c] for c in bad_dtypes}
-        raise DataValidationError(
-            f"Unexpected dtypes {bad_dtypes}; expected kinds {expected}"
-        )
+        raise DataValidationError(f"Unexpected dtypes {bad_dtypes}; expected kinds {expected}")
 
     nulls = df.isna().sum()
     nulls = nulls[nulls > 0]
@@ -86,16 +85,12 @@ def validate(df: pd.DataFrame) -> dict:
 
     bad_target = set(df[TARGET].unique()) - {0, 1}
     if bad_target:
-        raise DataValidationError(
-            f"'{TARGET}' must only contain 0/1, found {sorted(bad_target)}"
-        )
+        raise DataValidationError(f"'{TARGET}' must only contain 0/1, found {sorted(bad_target)}")
 
     for col, (lo, hi) in VALUE_RANGES.items():
         out_of_range = int((~df[col].between(lo, hi)).sum())
         if out_of_range:
-            raise DataValidationError(
-                f"'{col}' has {out_of_range} values outside [{lo}, {hi}]"
-            )
+            raise DataValidationError(f"'{col}' has {out_of_range} values outside [{lo}, {hi}]")
 
     counts = df[TARGET].value_counts().sort_index()
     return {
@@ -152,8 +147,7 @@ def split(
 def load_split() -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
     """Read the saved train/test CSVs (run ``python -m src.data`` first)."""
     train, test = pd.read_csv(TRAIN_DATA), pd.read_csv(TEST_DATA)
-    return (train.drop(columns=TARGET), test.drop(columns=TARGET),
-            train[TARGET], test[TARGET])
+    return (train.drop(columns=TARGET), test.drop(columns=TARGET), train[TARGET], test[TARGET])
 
 
 if __name__ == "__main__":

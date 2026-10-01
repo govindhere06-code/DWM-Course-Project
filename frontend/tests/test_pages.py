@@ -1,4 +1,5 @@
 """Headless tests of the dashboard pages with streamlit.testing.AppTest."""
+
 import json
 import sys
 from pathlib import Path
@@ -43,12 +44,15 @@ def test_overview_unfiltered_kpis():
     assert len(at.get("plotly_chart")) == 4
 
 
-@pytest.mark.parametrize("widget, key, value", [
-    ("multiselect", "f_geo", ["Germany"]),
-    ("multiselect", "f_gender", ["Female"]),
-    ("slider", "f_age", (40, 59)),
-    ("radio", "f_active", "Inactive only"),
-])
+@pytest.mark.parametrize(
+    "widget, key, value",
+    [
+        ("multiselect", "f_geo", ["Germany"]),
+        ("multiselect", "f_gender", ["Female"]),
+        ("slider", "f_age", (40, 59)),
+        ("radio", "f_active", "Inactive only"),
+    ],
+)
 def test_each_filter_updates_every_kpi_and_chart(widget, key, value):
     at = run_page("overview.py")
     before_m, before_c = metrics(at), charts(at)
@@ -59,7 +63,7 @@ def test_each_filter_updates_every_kpi_and_chart(widget, key, value):
     # Inactive filter makes "Inactive members" 100% — still a change; every KPI must move.
     assert set(changed) == set(before_m), f"unchanged KPIs: {set(before_m) - set(changed)}"
     # Gender / geography filters collapse that chart to one bar but must still re-render.
-    assert all(b != a for b, a in zip(before_c, after_c))
+    assert all(b != a for b, a in zip(before_c, after_c, strict=False))
 
 
 def test_filter_matches_german_numbers():

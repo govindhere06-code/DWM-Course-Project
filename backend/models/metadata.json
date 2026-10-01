@@ -69,7 +69,7 @@
   ],
   "n_train": 8000,
   "random_state": 42,
-  "trained_at": "2026-10-01T12:13:34+00:00",
+  "trained_at": "2026-10-01T12:51:57+00:00",
   "python": "3.13.8",
   "library_versions": {
     "scikit-learn": "1.9.1",

@@ -1,4 +1,5 @@
 """Sidebar filters shared by the Overview and EDA Explorer pages."""
+
 from __future__ import annotations
 
 import pandas as pd
@@ -37,9 +38,11 @@ def sidebar_filters(df: pd.DataFrame) -> pd.DataFrame:
             st.rerun()
 
     lo, hi = st.session_state["f_age"]
-    mask = (df["Geography"].isin(st.session_state["f_geo"])
-            & df["Gender"].isin(st.session_state["f_gender"])
-            & df["Age"].between(lo, hi))
+    mask = (
+        df["Geography"].isin(st.session_state["f_geo"])
+        & df["Gender"].isin(st.session_state["f_gender"])
+        & df["Age"].between(lo, hi)
+    )
     active = ACTIVE_OPTIONS[st.session_state["f_active"]]
     if active is not None:
         mask &= df["IsActiveMember"] == active
@@ -52,7 +55,9 @@ def sidebar_filters(df: pd.DataFrame) -> pd.DataFrame:
 def require_rows(df: pd.DataFrame) -> bool:
     """Show a friendly message (instead of empty charts) when filters match nothing."""
     if df.empty:
-        st.info("No customers match the current filters. Widen the selection in the sidebar "
-                "or press **Reset filters**.")
+        st.info(
+            "No customers match the current filters. Widen the selection in the sidebar "
+            "or press **Reset filters**."
+        )
         return False
     return True

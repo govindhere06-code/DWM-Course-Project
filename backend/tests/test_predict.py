@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -44,12 +43,33 @@ def test_predict_missing_columns_lists_them():
 
 @needs_model
 def test_high_risk_profile_scores_higher_than_low_risk():
-    base = {"CreditScore": 650, "Tenure": 5, "Balance": 100_000.0, "HasCrCard": 1,
-            "EstimatedSalary": 100_000.0}
-    high = predict({**base, "Geography": "Germany", "Gender": "Female", "Age": 50,
-                    "IsActiveMember": 0, "NumOfProducts": 3})
-    low = predict({**base, "Geography": "France", "Gender": "Male", "Age": 30,
-                   "IsActiveMember": 1, "NumOfProducts": 2})
+    base = {
+        "CreditScore": 650,
+        "Tenure": 5,
+        "Balance": 100_000.0,
+        "HasCrCard": 1,
+        "EstimatedSalary": 100_000.0,
+    }
+    high = predict(
+        {
+            **base,
+            "Geography": "Germany",
+            "Gender": "Female",
+            "Age": 50,
+            "IsActiveMember": 0,
+            "NumOfProducts": 3,
+        }
+    )
+    low = predict(
+        {
+            **base,
+            "Geography": "France",
+            "Gender": "Male",
+            "Age": 30,
+            "IsActiveMember": 1,
+            "NumOfProducts": 2,
+        }
+    )
     assert high["churn_probability"].iloc[0] > low["churn_probability"].iloc[0] + 0.3
     assert high["risk_band"].iloc[0] == "High" and low["risk_band"].iloc[0] == "Low"
 

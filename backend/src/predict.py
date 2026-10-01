@@ -7,6 +7,7 @@ Input rows use the raw CSV schema; ID columns (RowNumber, CustomerId, Surname)
 and Exited are optional and ignored — the pipeline does all feature
 engineering itself. Demo: ``python -m src.predict``.
 """
+
 from __future__ import annotations
 
 import json
@@ -15,6 +16,8 @@ from functools import lru_cache
 import joblib
 import numpy as np
 import pandas as pd
+from imblearn.pipeline import Pipeline
+from numpy.typing import ArrayLike
 
 from src.config import (
     FEATURE_COLS,
@@ -33,21 +36,23 @@ class MissingColumnsError(ValueError):
 
 
 @lru_cache(maxsize=1)
-def load_model():
+def load_model() -> tuple[Pipeline, dict]:
     """Fitted pipeline and metadata (cached after the first call)."""
     if not PIPELINE_PATH.exists():
         raise FileNotFoundError(
-            f"{PIPELINE_PATH} not found — run `python -m src.evaluate` to train and save it")
+            f"{PIPELINE_PATH} not found — run `python -m src.evaluate` to train and save it"
+        )
     return joblib.load(PIPELINE_PATH), json.loads(METADATA_PATH.read_text())
 
 
-def risk_band(probability) -> np.ndarray:
+def risk_band(probability: ArrayLike) -> np.ndarray:
     """Low (< 0.3), Medium (0.3 – 0.6), High (> 0.6)."""
     p = np.asarray(probability, dtype=float)
     return np.select([p < LOW_RISK_MAX, p <= MEDIUM_RISK_MAX], RISK_BANDS[:2], RISK_BANDS[2])
 
 
 def validate_input(df: pd.DataFrame) -> None:
+    """Raise MissingColumnsError listing any required raw columns that are absent."""
     missing = [c for c in FEATURE_COLS if c not in df.columns]
     if missing:
         raise MissingColumnsError(f"Missing required columns: {', '.join(missing)}")
@@ -65,11 +70,14 @@ def predict(df_raw: pd.DataFrame, threshold: float | None = None) -> pd.DataFram
     pipeline, meta = load_model()
     threshold = meta["threshold"] if threshold is None else threshold
     proba = pipeline.predict_proba(df_raw[FEATURE_COLS])[:, 1]
-    return pd.DataFrame({
-        "churn_probability": proba.round(4),
-        "churn_prediction": (proba >= threshold).astype(int),
-        "risk_band": risk_band(proba),
-    }, index=df_raw.index)
+    return pd.DataFrame(
+        {
+            "churn_probability": proba.round(4),
+            "churn_prediction": (proba >= threshold).astype(int),
+            "risk_band": risk_band(proba),
+        },
+        index=df_raw.index,
+    )
 
 
 if __name__ == "__main__":

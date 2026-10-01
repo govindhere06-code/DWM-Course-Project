@@ -1,0 +1,38 @@
+[project]
+name = "churn-prediction"
+version = "1.0.0"
+description = "Bank customer churn prediction: EDA, modelling, explainability and a Streamlit dashboard"
+requires-python = ">=3.11"
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "D1", "ANN001", "ANN201", "ANN202"]
+ignore = [
+    "D104",  # package __init__ docstrings
+    "D105",  # magic methods
+    "D107",  # __init__
+]
+
+[tool.ruff.lint.per-file-ignores]
+# docstrings / annotations are required for the importable library in backend/src only
+"backend/tests/**" = ["D1", "ANN"]
+"frontend/**" = ["D1", "ANN"]
+"backend/notebooks/**" = ["D1", "ANN", "E402"]
+"frontend/views/**" = ["D1", "ANN", "E402"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src", "ui"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    # raised inside shap's own colour setup against newer matplotlib; not our code
+    "ignore::PendingDeprecationWarning:shap.*",
+]

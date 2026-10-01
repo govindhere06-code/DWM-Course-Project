@@ -7,11 +7,13 @@ Chain used by every model:
 built with ``imblearn.pipeline.Pipeline`` so a sampler such as SMOTE is only
 applied when fitting, i.e. on training folds, never on validation/test data.
 """
+
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
 from imblearn.pipeline import Pipeline
+from numpy.typing import ArrayLike
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import make_pipeline
@@ -40,8 +42,15 @@ ENGINEERED_COLS = [
 
 # Column groups after FeatureEngineer, as consumed by the preprocessor.
 SCALED_COLS = [
-    "CreditScore", "Age", "Tenure", "Balance", "NumOfProducts", "EstimatedSalary",
-    "TenureByAge", "CreditScoreGivenAge", "ProductsPerTenure",
+    "CreditScore",
+    "Age",
+    "Tenure",
+    "Balance",
+    "NumOfProducts",
+    "EstimatedSalary",
+    "TenureByAge",
+    "CreditScoreGivenAge",
+    "ProductsPerTenure",
 ]
 # Extremely right-skewed (median 0.75, max ~10,600 because some salaries are tiny):
 # log1p before scaling so a handful of rows don't dominate distance/linear models.
@@ -72,15 +81,17 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
     - TenureByAge: Tenure / Age — share of adult life spent with the bank (loyalty).
     - CreditScoreGivenAge: CreditScore / Age — creditworthiness relative to life stage.
     - ProductsPerTenure: NumOfProducts / (Tenure + 1) — products bought fast may signal mis-selling.
-    - AgeGroup: 18-29 / 30-39 / 40-49 / 50-59 / 60+ — churn is non-monotonic in age (peaks at 50-59).
+    - AgeGroup: 18-29 / 30-39 / 40-49 / 50-59 / 60+ — churn is non-monotonic in age (peak 50-59).
     - IsSenior: 1 if Age >= 60 — churn drops again for the oldest customers.
     """
 
-    def fit(self, X: pd.DataFrame, y=None) -> "FeatureEngineer":
+    def fit(self, X: pd.DataFrame, y: pd.Series | None = None) -> FeatureEngineer:
+        """Record the input columns; nothing is learned from the data."""
         self.feature_names_in_ = np.asarray(X.columns, dtype=object)
         return self
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+        """Drop ID/target columns and append the engineered features."""
         X = X.drop(columns=DROP_COLS + [TARGET], errors="ignore").copy()
         X["BalanceZero"] = (X["Balance"] == 0).astype(int)
         X["BalanceSalaryRatio"] = _safe_divide(X["Balance"], X["EstimatedSalary"])
@@ -91,7 +102,8 @@ class FeatureEngineer(BaseEstimator, TransformerMixin):
         X["IsSenior"] = (X["Age"] >= SENIOR_AGE).astype(int)
         return X
 
-    def get_feature_names_out(self, input_features=None) -> np.ndarray:
+    def get_feature_names_out(self, input_features: ArrayLike | None = None) -> np.ndarray:
+        """Output column names: kept inputs followed by the engineered features."""
         base = self.feature_names_in_ if input_features is None else input_features
         kept = [c for c in base if c not in DROP_COLS + [TARGET]]
         return np.asarray(kept + ENGINEERED_COLS, dtype=object)
@@ -109,13 +121,15 @@ def build_preprocessor(scale: bool = True, drop_first: bool | None = None) -> Co
     drop_first = scale if drop_first is None else drop_first
     numeric = StandardScaler() if scale else "passthrough"
     heavy_tail = (
-        make_pipeline(FunctionTransformer(np.log1p, feature_names_out="one-to-one"),
-                      StandardScaler())
-        if scale else "passthrough"
+        make_pipeline(
+            FunctionTransformer(np.log1p, feature_names_out="one-to-one"), StandardScaler()
+        )
+        if scale
+        else "passthrough"
     )
-    onehot = OneHotEncoder(handle_unknown="ignore",
-                           drop="first" if drop_first else None,
-                           sparse_output=False)
+    onehot = OneHotEncoder(
+        handle_unknown="ignore", drop="first" if drop_first else None, sparse_output=False
+    )
     gender = OrdinalEncoder(categories=[["Female", "Male"]])  # Female=0, Male=1
     return ColumnTransformer(
         transformers=[
@@ -130,7 +144,9 @@ def build_preprocessor(scale: bool = True, drop_first: bool | None = None) -> Co
     )
 
 
-def build_pipeline(model, scale: bool = True, sampler=None) -> Pipeline:
+def build_pipeline(
+    model: BaseEstimator, scale: bool = True, sampler: BaseEstimator | None = None
+) -> Pipeline:
     """FeatureEngineer -> preprocessor -> [sampler] -> model as an imblearn Pipeline."""
     steps = [("features", FeatureEngineer()), ("preprocess", build_preprocessor(scale))]
     if sampler is not None:
@@ -154,16 +170,18 @@ if __name__ == "__main__":
     X, y = prepare(load_raw())
     X_train, X_test, y_train, y_test = split(X, y, save=False)
     demos = {
-        True: LogisticRegression(class_weight="balanced", max_iter=1000,
-                                 random_state=RANDOM_STATE),
-        False: RandomForestClassifier(class_weight="balanced", n_jobs=-1,
-                                      random_state=RANDOM_STATE),
+        True: LogisticRegression(class_weight="balanced", max_iter=1000, random_state=RANDOM_STATE),
+        False: RandomForestClassifier(
+            class_weight="balanced", n_jobs=-1, random_state=RANDOM_STATE
+        ),
     }
     for scale, model in demos.items():
         pipe = build_pipeline(model, scale=scale)
         pipe.fit(X_train, y_train)
         Xt = pipe[:-1].transform(X_test)  # everything except the model
         names = get_feature_names(pipe)
-        print(f"\n{type(model).__name__} (scale={scale}): X_test {X_test.shape} -> {Xt.shape}, "
-              f"NaN={np.isnan(Xt).sum()}, inf={np.isinf(Xt).sum()}")
+        print(
+            f"\n{type(model).__name__} (scale={scale}): X_test {X_test.shape} -> {Xt.shape}, "
+            f"NaN={np.isnan(Xt).sum()}, inf={np.isinf(Xt).sum()}"
+        )
         print(names)

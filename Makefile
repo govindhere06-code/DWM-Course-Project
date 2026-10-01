@@ -13,7 +13,7 @@ ROOT := $(CURDIR)
 PYTHON := "$(ROOT)/$(VENV_PY)"
 BACKEND := cd backend &&
 
-.PHONY: install prepare eda train evaluate explain dashboard test all
+.PHONY: install prepare eda train train-quick evaluate explain dashboard test lint all
 
 install:
 	$(BOOTSTRAP) -m venv .venv
@@ -26,8 +26,13 @@ prepare:
 eda:
 	$(BACKEND) $(PYTHON) -m src.eda
 
+# raw CSV -> validated split -> model selection -> final model, metrics, SHAP (~5 min)
 train:
 	$(BACKEND) $(PYTHON) -m src.train
+
+# refit + evaluate the saved model choice / tuned params (< 1 min)
+train-quick:
+	$(BACKEND) $(PYTHON) -m src.train --stage final
 
 evaluate:
 	$(BACKEND) $(PYTHON) -m src.evaluate
@@ -42,4 +47,8 @@ test:
 	$(BACKEND) $(PYTHON) -m pytest -q
 	cd frontend && $(PYTHON) -m pytest -q
 
-all: install prepare eda train evaluate explain
+all: install eda train test
+
+lint:
+	$(PYTHON) -m ruff check backend frontend
+	$(PYTHON) -m black --check backend frontend

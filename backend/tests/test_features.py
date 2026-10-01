@@ -19,18 +19,20 @@ from src.features import (
 @pytest.fixture
 def three_rows():
     """Hand-built rows; row 3 has EstimatedSalary = 0 and Tenure = 0 to test guards."""
-    return pd.DataFrame({
-        "CreditScore": [600, 750, 500],
-        "Geography": ["France", "Germany", "Spain"],
-        "Gender": ["Female", "Male", "Female"],
-        "Age": [40, 60, 25],
-        "Tenure": [3, 10, 0],
-        "Balance": [0.0, 100_000.0, 50_000.0],
-        "NumOfProducts": [2, 1, 3],
-        "HasCrCard": [1, 0, 1],
-        "IsActiveMember": [1, 0, 0],
-        "EstimatedSalary": [50_000.0, 200_000.0, 0.0],
-    })
+    return pd.DataFrame(
+        {
+            "CreditScore": [600, 750, 500],
+            "Geography": ["France", "Germany", "Spain"],
+            "Gender": ["Female", "Male", "Female"],
+            "Age": [40, 60, 25],
+            "Tenure": [3, 10, 0],
+            "Balance": [0.0, 100_000.0, 50_000.0],
+            "NumOfProducts": [2, 1, 3],
+            "HasCrCard": [1, 0, 1],
+            "IsActiveMember": [1, 0, 0],
+            "EstimatedSalary": [50_000.0, 200_000.0, 0.0],
+        }
+    )
 
 
 @pytest.fixture(scope="module")
@@ -74,8 +76,16 @@ def test_age_group_boundaries(three_rows):
     df = pd.concat([three_rows.iloc[[0]]] * 8, ignore_index=True)
     df["Age"] = [18, 29, 30, 39, 49, 50, 59, 60]
     out = FeatureEngineer().fit_transform(df)
-    assert out["AgeGroup"].tolist() == ["18-29", "18-29", "30-39", "30-39",
-                                        "40-49", "50-59", "50-59", "60+"]
+    assert out["AgeGroup"].tolist() == [
+        "18-29",
+        "18-29",
+        "30-39",
+        "30-39",
+        "40-49",
+        "50-59",
+        "50-59",
+        "60+",
+    ]
 
 
 def test_is_senior(engineered):
@@ -90,8 +100,9 @@ def test_adds_exactly_engineered_columns(three_rows, engineered):
 
 
 def test_drops_id_columns_if_present(three_rows):
-    raw_like = three_rows.assign(RowNumber=[1, 2, 3], CustomerId=[11, 12, 13],
-                                 Surname=["A", "B", "C"], Exited=[0, 1, 0])
+    raw_like = three_rows.assign(
+        RowNumber=[1, 2, 3], CustomerId=[11, 12, 13], Surname=["A", "B", "C"], Exited=[0, 1, 0]
+    )
     out = FeatureEngineer().fit_transform(raw_like)
     assert not set(DROP_COLS + ["Exited"]) & set(out.columns)
 
@@ -126,8 +137,11 @@ def test_get_feature_names_out(three_rows):
 @pytest.mark.parametrize("scale, n_cols", [(True, 21), (False, 23)])
 def test_preprocessor_train_test_consistent(splits, scale, n_cols):
     X_train, X_test, y_train, _ = splits
-    model = (LogisticRegression(max_iter=1000) if scale
-             else DecisionTreeClassifier(random_state=RANDOM_STATE))
+    model = (
+        LogisticRegression(max_iter=1000)
+        if scale
+        else DecisionTreeClassifier(random_state=RANDOM_STATE)
+    )
     pipe = build_pipeline(model, scale=scale)
     pipe.fit(X_train, y_train)
     Xt_train = pipe[:-1].transform(X_train)
@@ -177,8 +191,9 @@ def test_unknown_category_does_not_crash(splits, three_rows):
 
 def test_sampler_only_runs_during_fit(splits):
     X_train, X_test, y_train, _ = splits
-    pipe = build_pipeline(LogisticRegression(max_iter=1000), scale=True,
-                          sampler=SMOTE(random_state=RANDOM_STATE))
+    pipe = build_pipeline(
+        LogisticRegression(max_iter=1000), scale=True, sampler=SMOTE(random_state=RANDOM_STATE)
+    )
     assert list(pipe.named_steps) == ["features", "preprocess", "sampler", "model"]
     pipe.fit(X_train, y_train)
     # predicting on test must not resample: one prediction per test row
