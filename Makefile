@@ -40,5 +40,6 @@ dashboard:
 
 test:
 	$(BACKEND) $(PYTHON) -m pytest -q
+	cd frontend && $(PYTHON) -m pytest -q
 
 all: install prepare eda train evaluate explain

@@ -5,7 +5,7 @@ Work in progress — full README lands in TICKET-20.
 ## Structure
 ```
 backend/    ML pipeline: src/, data/, models/, reports/, notebooks/, tests/
-frontend/   Streamlit dashboard (app.py, pages/)
+frontend/   Streamlit dashboard (app.py, views/, ui/, tests/)
 ```
 
 ## Quick start
