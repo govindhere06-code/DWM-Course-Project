@@ -1,0 +1,15 @@
+# environments
+.venv/
+venv/
+env/
+
+# python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# jupyter
+.ipynb_checkpoints/
+
+# models
+models/*.joblib
