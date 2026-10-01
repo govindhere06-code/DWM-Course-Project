@@ -171,6 +171,91 @@ def explain_single(row: pd.DataFrame | pd.Series | dict, pipeline=None, top_k: i
     return fig, contribs
 
 
+# --------------------------------------------- human-readable explanations
+# Model features that are exact functions of ONE raw column are summed back into
+# it, so contributions read in business terms. Ratios mix two raw columns and
+# stay separate under a friendly name.
+RATIO_LABELS = {
+    "BalanceSalaryRatio": "Balance / salary ratio",
+    "TenureByAge": "Tenure relative to age",
+    "CreditScoreGivenAge": "Credit score relative to age",
+    "ProductsPerTenure": "Products per year of tenure",
+}
+
+
+def raw_group(model_feature: str) -> str:
+    """Name of the raw column (or ratio label) a model feature belongs to."""
+    if model_feature.startswith("AgeGroup_") or model_feature == "IsSenior":
+        return "Age"
+    if model_feature.startswith("Geography_"):
+        return "Geography"
+    if model_feature == "BalanceZero":
+        return "Balance"
+    return RATIO_LABELS.get(model_feature, model_feature)
+
+
+def grouped_contributions(sv_row: shap.Explanation) -> pd.Series:
+    """SHAP values of one row summed per raw feature, sorted by |contribution|."""
+    s = pd.Series(sv_row.values, index=sv_row.feature_names)
+    grouped = s.groupby(s.index.map(raw_group)).sum()
+    return grouped.reindex(grouped.abs().sort_values(ascending=False).index)
+
+
+def describe_value(group: str, row: pd.Series) -> str:
+    """Short human description of a customer's value for a feature group."""
+    match group:
+        case "Age":
+            return f"Age {int(row['Age'])}"
+        case "Geography":
+            return f"Customer in {row['Geography']}"
+        case "Gender":
+            return str(row["Gender"])
+        case "IsActiveMember":
+            return "Active member" if row["IsActiveMember"] == 1 else "Inactive member"
+        case "HasCrCard":
+            return "Has a credit card" if row["HasCrCard"] == 1 else "No credit card"
+        case "NumOfProducts":
+            n = int(row["NumOfProducts"])
+            return f"{n} product" + ("s" if n != 1 else "")
+        case "Balance":
+            return "Zero balance" if row["Balance"] == 0 else f"Balance {row['Balance']:,.0f}"
+        case "CreditScore":
+            return f"Credit score {int(row['CreditScore'])}"
+        case "Tenure":
+            return f"Tenure {int(row['Tenure'])} years"
+        case "EstimatedSalary":
+            return f"Salary {row['EstimatedSalary']:,.0f}"
+        case _:
+            return group
+
+
+def top_reasons(contributions: pd.Series, row: pd.Series, k: int = 3) -> list[str]:
+    """Plain-English sentences for the k strongest drivers of one prediction."""
+    reasons = []
+    for group, value in contributions.head(k).items():
+        direction = "increases" if value > 0 else "decreases"
+        reasons.append(f"{describe_value(group, row)} {direction} churn risk")
+    return reasons
+
+
+def explain_customer(row: pd.DataFrame | pd.Series | dict, pipeline=None) -> dict:
+    """Probability, grouped SHAP contributions and top-3 reasons for one customer."""
+    pipeline = pipeline or load_pipeline()[0]
+    if isinstance(row, dict):
+        row = pd.DataFrame([row])
+    elif isinstance(row, pd.Series):
+        row = row.to_frame().T
+    row = row.drop(columns=[TARGET], errors="ignore")
+    sv = shap_explanation(pipeline, row)[0]
+    contributions = grouped_contributions(sv)
+    return {
+        "probability": float(pipeline.predict_proba(row)[:, 1][0]),
+        "base_value": float(sv.base_values),
+        "contributions": contributions,
+        "reasons": top_reasons(contributions, row.iloc[0]),
+    }
+
+
 # ------------------------------------------------------------------ main
 def _pick_example(proba: np.ndarray, mask: np.ndarray) -> int:
     """Positional index of the row in ``mask`` whose probability is the group median."""

@@ -1,4 +1,5 @@
 """Headless tests of the dashboard pages with streamlit.testing.AppTest."""
+import json
 import sys
 from pathlib import Path
 
@@ -111,9 +112,90 @@ def test_eda_findings_expander():
     assert "German customers churn twice as often" in text
 
 
-# ------------------------------------------------------------ placeholders
-@pytest.mark.parametrize("page", ["model_performance.py", "predict_customer.py",
-                                  "batch_prediction.py"])
-def test_placeholder_pages_render(page):
-    at = run_page(page)
-    assert any("Coming in T07" in i.value for i in at.info)
+# ------------------------------------------------------- model performance
+def _cm_values(at):
+    fig = [c for c in at.get("plotly_chart") if "Confusion matrix" in c.proto.spec][0]
+    return json.loads(fig.proto.spec)["data"][0]["z"]
+
+
+def test_model_performance_renders():
+    at = run_page("model_performance.py")
+    assert len(at.dataframe) == 4  # one comparison table per tab
+    assert len(at.get("plotly_chart")) >= 4  # matrix, ROC, PR, importance
+    labels = {m.label for m in at.metric}
+    assert {"Precision", "Recall", "F1", "Accuracy", "Customers flagged"} <= labels
+
+
+def test_threshold_slider_updates_matrix_and_metrics():
+    at = run_page("model_performance.py")
+    before_cm, before_m = _cm_values(at), metrics(at)
+    at.slider(key="perf_threshold").set_value(0.7).run()
+    assert not at.exception
+    after_cm, after_m = _cm_values(at), metrics(at)
+    assert before_cm != after_cm
+    assert before_m["Recall"] != after_m["Recall"]
+    assert after_m["Precision"] > before_m["Precision"]  # stricter threshold -> more precise
+    assert sum(map(sum, after_cm)) == 2000
+
+
+# ----------------------------------------------------------- single predict
+def _probability(at):
+    gauge = [c for c in at.get("plotly_chart") if '"indicator"' in c.proto.spec][0]
+    return json.loads(gauge.proto.spec)["data"][0]["value"] / 100
+
+
+def test_predict_page_presets_order_risk():
+    at = run_page("predict_customer.py")
+    at.button[1].click().run()  # High-risk example
+    assert not at.exception
+    high = _probability(at)
+    high_md = " ".join(m.value for m in at.markdown)
+    at.button[2].click().run()  # Low-risk example
+    low = _probability(at)
+    assert high > 0.6 > 0.3 > low
+    assert "High risk" in high_md and "increases churn risk" in high_md
+    assert len(at.get("plotly_chart")) == 2  # gauge + waterfall
+
+
+def test_predict_page_reacts_to_inputs():
+    at = run_page("predict_customer.py")
+    base = _probability(at)
+    at.slider(key="in_NumOfProducts").set_value(4).run()
+    assert _probability(at) > base
+
+
+# ---------------------------------------------------------- batch predict
+def test_batch_page_sample_end_to_end():
+    at = run_page("batch_prediction.py")
+    assert any("Upload a CSV" in i.value for i in at.info)
+    at.button[0].click().run()  # "Use sample: test.csv"
+    assert not at.exception
+    m = metrics(at)
+    assert m["Customers scored"] == "2,000"
+    assert float(m["ROC-AUC"]) > 0.85  # Exited present -> evaluation section
+    assert len(at.get("download_button")) == 1
+
+
+def test_batch_helpers_scored_columns():
+    from src.config import TEST_DATA
+    from ui.batch import NEW_COLS, read_csv, score, to_csv_bytes
+
+    scored = score(read_csv(TEST_DATA.read_bytes()))
+    assert all(c in scored.columns for c in NEW_COLS)
+    assert scored["churn_probability"].is_monotonic_decreasing
+    roundtrip = read_csv(to_csv_bytes(scored))
+    assert list(roundtrip.columns[-3:]) == NEW_COLS and len(roundtrip) == 2000
+
+
+def test_batch_helpers_friendly_errors():
+    from src.config import TEST_DATA
+    from ui.batch import BatchInputError, read_csv, score
+
+    df = read_csv(TEST_DATA.read_bytes()).drop(columns=["Age", "Geography"])
+    with pytest.raises(BatchInputError, match=r"Missing required columns: \*\*Geography, Age"):
+        score(df)
+    with pytest.raises(BatchInputError, match="no data rows"):
+        read_csv(b"CreditScore,Age\n")
+    bad = read_csv(TEST_DATA.read_bytes()).head(3).assign(Age=["old", "x", "y"])
+    with pytest.raises(BatchInputError, match="could not be scored"):
+        score(bad)
