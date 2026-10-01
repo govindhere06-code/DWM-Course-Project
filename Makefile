@@ -13,12 +13,15 @@ ROOT := $(CURDIR)
 PYTHON := "$(ROOT)/$(VENV_PY)"
 BACKEND := cd backend &&
 
-.PHONY: install eda train evaluate explain dashboard test all
+.PHONY: install prepare eda train evaluate explain dashboard test all
 
 install:
 	$(BOOTSTRAP) -m venv .venv
 	$(PYTHON) -m pip install --upgrade pip
 	$(PYTHON) -m pip install -r requirements.txt
+
+prepare:
+	$(BACKEND) $(PYTHON) -m src.data
 
 eda:
 	$(BACKEND) $(PYTHON) -m src.eda
@@ -38,4 +41,4 @@ dashboard:
 test:
 	$(BACKEND) $(PYTHON) -m pytest -q
 
-all: install eda train evaluate explain
+all: install prepare eda train evaluate explain

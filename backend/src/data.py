@@ -1,10 +1,20 @@
-"""Load the raw churn dataset and validate it before anything else touches it."""
+"""Load, validate, clean and split the raw churn dataset."""
 from pathlib import Path
 
 import pandas as pd
 from pandas.api import types as ptypes
+from sklearn.model_selection import train_test_split
 
-from src.config import RAW_DATA, TARGET
+from src.config import (
+    DROP_COLS,
+    PROCESSED_DIR,
+    RANDOM_STATE,
+    RAW_DATA,
+    TARGET,
+    TEST_DATA,
+    TEST_SIZE,
+    TRAIN_DATA,
+)
 
 
 class DataValidationError(ValueError):
@@ -105,7 +115,52 @@ def load_raw(path: Path | str = RAW_DATA) -> pd.DataFrame:
     return pd.read_csv(path)
 
 
-if __name__ == "__main__":
-    from pprint import pprint
+def prepare(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
+    """Drop identifier columns and separate features from the target.
 
-    pprint(validate(load_raw()))
+    Rows are never removed: outliers are plausible real customers (see
+    reports/preprocessing_decisions.md).
+    """
+    if df.duplicated().any():
+        raise DataValidationError(f"{int(df.duplicated().sum())} duplicate rows found")
+    X = df.drop(columns=DROP_COLS + [TARGET], errors="ignore")
+    y = df[TARGET].astype(int)
+    return X, y
+
+
+def split(
+    X: pd.DataFrame,
+    y: pd.Series,
+    test_size: float = TEST_SIZE,
+    save: bool = True,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+    """Stratified train/test split. Optionally writes train.csv / test.csv.
+
+    The split happens before any fitting, so no statistic from the test set
+    can leak into preprocessing or modelling.
+    """
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=test_size, stratify=y, random_state=RANDOM_STATE
+    )
+    if save:
+        PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+        X_train.assign(**{TARGET: y_train}).to_csv(TRAIN_DATA, index=False)
+        X_test.assign(**{TARGET: y_test}).to_csv(TEST_DATA, index=False)
+    return X_train, X_test, y_train, y_test
+
+
+def load_split() -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+    """Read the saved train/test CSVs (run ``python -m src.data`` first)."""
+    train, test = pd.read_csv(TRAIN_DATA), pd.read_csv(TEST_DATA)
+    return (train.drop(columns=TARGET), test.drop(columns=TARGET),
+            train[TARGET], test[TARGET])
+
+
+if __name__ == "__main__":
+    raw = load_raw()
+    summary = validate(raw)
+    X, y = prepare(raw)
+    X_train, X_test, y_train, y_test = split(X, y)
+    print(f"Validated {summary['shape']}; features {X.shape[1]}: {list(X.columns)}")
+    print(f"Train {X_train.shape}, churn rate {y_train.mean():.4f} -> {TRAIN_DATA}")
+    print(f"Test  {X_test.shape}, churn rate {y_test.mean():.4f} -> {TEST_DATA}")

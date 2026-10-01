@@ -1,7 +1,8 @@
 import pandas as pd
 import pytest
 
-from src.data import DataValidationError, load_raw, validate
+from src.config import DROP_COLS, TARGET
+from src.data import DataValidationError, load_raw, prepare, split, validate
 
 
 @pytest.fixture(scope="module")
@@ -71,3 +72,37 @@ def test_out_of_range_raises(raw, col, value):
     df.loc[0, col] = value
     with pytest.raises(DataValidationError, match=f"'{col}' has 1 values outside"):
         validate(df)
+
+
+# ------------------------------------------------------ prepare / split
+def test_prepare_drops_ids_and_target(raw):
+    X, y = prepare(raw)
+    assert not set(DROP_COLS + [TARGET]) & set(X.columns)
+    assert X.shape == (10000, 10)
+    assert y.name == TARGET and len(y) == 10000
+
+
+def test_prepare_keeps_all_rows(raw):
+    X, _ = prepare(raw)
+    assert len(X) == len(raw)  # outliers are kept
+
+
+def test_prepare_rejects_duplicates(raw):
+    with pytest.raises(DataValidationError, match="duplicate"):
+        prepare(pd.concat([raw, raw.iloc[[0]]]))
+
+
+def test_split_sizes_and_stratification(raw):
+    X, y = prepare(raw)
+    X_train, X_test, y_train, y_test = split(X, y, save=False)
+    assert (len(X_train), len(X_test)) == (8000, 2000)
+    assert y_train.mean() == pytest.approx(y.mean(), abs=0.01)
+    assert y_test.mean() == pytest.approx(y.mean(), abs=0.01)
+    assert set(X_train.index).isdisjoint(X_test.index)
+
+
+def test_split_is_reproducible(raw):
+    X, y = prepare(raw)
+    a = split(X, y, save=False)[1].index
+    b = split(X, y, save=False)[1].index
+    assert a.equals(b)
