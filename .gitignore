@@ -13,3 +13,6 @@ __pycache__/
 
 # models
 backend/models/*.joblib
+
+# third-party data (Kaggle S4E1 re-upload, licence unclear) - kept local only
+sample_data/train.csv

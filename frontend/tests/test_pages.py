@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from pandas import testing as pd_testing
 from streamlit.testing.v1 import AppTest
 
 FRONTEND = Path(__file__).resolve().parents[1]
@@ -177,7 +178,7 @@ def test_batch_page_sample_end_to_end():
     m = metrics(at)
     assert m["Customers scored"] == "2,000"
     assert float(m["ROC-AUC"]) > 0.85  # Exited present -> evaluation section
-    assert len(at.get("download_button")) == 1
+    assert len(at.get("download_button")) == 2  # CSV + Excel
 
 
 def test_batch_helpers_scored_columns():
@@ -203,3 +204,36 @@ def test_batch_helpers_friendly_errors():
     bad = read_csv(TEST_DATA.read_bytes()).head(3).assign(Age=["old", "x", "y"])
     with pytest.raises(BatchInputError, match="could not be scored"):
         score(bad)
+
+
+def test_batch_excel_upload_matches_csv():
+    from src.config import TEST_DATA
+    from ui.batch import read_csv, read_upload, score, to_excel_bytes
+
+    df = read_csv(TEST_DATA.read_bytes())
+    xlsx = to_excel_bytes(df, sheet_name="Customers")
+    from_excel = score(read_upload(xlsx, "customers.XLSX"))
+    from_csv = score(read_upload(TEST_DATA.read_bytes(), "test.csv"))
+    assert len(from_excel) == 2000
+    pd_testing.assert_series_equal(
+        from_excel["churn_probability"].reset_index(drop=True),
+        from_csv["churn_probability"].reset_index(drop=True),
+    )
+
+
+def test_batch_excel_download_roundtrip():
+    from src.config import TEST_DATA
+    from ui.batch import NEW_COLS, read_excel, read_upload, score, to_excel_bytes
+
+    scored = score(read_upload(TEST_DATA.read_bytes(), "test.csv"))
+    back = read_excel(to_excel_bytes(scored))
+    assert list(back.columns[-3:]) == NEW_COLS and len(back) == 2000
+
+
+def test_batch_upload_errors_are_friendly():
+    from ui.batch import BatchInputError, read_upload
+
+    with pytest.raises(BatchInputError, match="Unsupported file type"):
+        read_upload(b"whatever", "customers.json")
+    with pytest.raises(BatchInputError, match="Excel workbook"):
+        read_upload(b"not really a workbook", "customers.xlsx")

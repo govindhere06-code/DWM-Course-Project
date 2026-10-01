@@ -24,8 +24,10 @@ DIVERGING = [
 def _layout(fig: go.Figure, height: int = 360, **kwargs) -> go.Figure:
     fig.update_layout(
         height=height,
-        margin=dict(l=10, r=10, t=50, b=10),
+        margin=dict(l=10, r=40, t=50, b=10),  # r: room for the vertical toolbar
         legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0, title_text=""),
+        # vertical toolbar down the right edge, so it never covers the title on narrow charts
+        modebar=dict(orientation="v"),
         hoverlabel=dict(font_size=13),
         **kwargs,
     )
@@ -350,7 +352,9 @@ def gauge(
             title=dict(text="Churn probability"),
         )
     )
-    fig.update_layout(height=height, margin=dict(l=30, r=30, t=60, b=10))
+    fig.update_layout(
+        height=height, margin=dict(l=30, r=40, t=60, b=10), modebar=dict(orientation="v")
+    )
     return fig
 
 

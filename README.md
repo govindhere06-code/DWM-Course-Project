@@ -99,7 +99,7 @@ across them:
 | **EDA Explorer** | any feature vs churn, interactive correlation heatmap, free scatter plot, key findings |
 | **Model Performance** | model comparison tables, a threshold slider that live-updates the confusion matrix, metrics and PR/ROC operating point, and feature importance / SHAP |
 | **Predict a Customer** | form for all 10 features: churn gauge, risk band, top 3 reasons and a SHAP waterfall |
-| **Batch Prediction** | upload a CSV and get a scored, sortable table, a risk-band chart and a CSV download (with metrics if `Exited` is present) |
+| **Batch Prediction** | upload a CSV or Excel (.xlsx) file and get a scored, sortable table, a risk-band chart and a CSV or Excel download (with metrics if `Exited` is present) |
 
 | EDA Explorer | Model Performance |
 |---|---|
