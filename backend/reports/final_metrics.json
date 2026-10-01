@@ -1,0 +1,64 @@
+{
+  "model": "XGBoost + smote",
+  "evaluated_on": "test set (2000 rows, churn rate 0.2035)",
+  "threshold_source": "out-of-fold predictions on the train set",
+  "chosen_threshold": 0.34,
+  "threshold_free": {
+    "roc_auc": 0.8671,
+    "pr_auc": 0.7179,
+    "brier": 0.0993
+  },
+  "at_default_0.5": {
+    "threshold": 0.5,
+    "accuracy": 0.87,
+    "precision": 0.7634,
+    "recall": 0.5233,
+    "f1": 0.621,
+    "tp": 213,
+    "fp": 66,
+    "fn": 194,
+    "tn": 1527,
+    "cost": 1036.0
+  },
+  "at_f1_optimal": {
+    "threshold": 0.34,
+    "accuracy": 0.852,
+    "precision": 0.6294,
+    "recall": 0.6634,
+    "f1": 0.6459,
+    "tp": 270,
+    "fp": 159,
+    "fn": 137,
+    "tn": 1434,
+    "cost": 844.0
+  },
+  "at_recall_0.75": {
+    "threshold": 0.22,
+    "accuracy": 0.7905,
+    "precision": 0.4906,
+    "recall": 0.769,
+    "f1": 0.599,
+    "tp": 313,
+    "fp": 325,
+    "fn": 94,
+    "tn": 1268,
+    "cost": 795.0
+  },
+  "at_cost_optimal": {
+    "threshold": 0.17,
+    "accuracy": 0.752,
+    "precision": 0.4417,
+    "recall": 0.828,
+    "f1": 0.5761,
+    "tp": 337,
+    "fp": 426,
+    "fn": 70,
+    "tn": 1167,
+    "cost": 776.0
+  },
+  "cost_assumption": "FN = 5, FP = 1",
+  "cv_train": {
+    "pr_auc": 0.6976,
+    "roc_auc": 0.8644
+  }
+}

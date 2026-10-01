@@ -1,0 +1,84 @@
+{
+  "model_name": "XGBoost + smote",
+  "estimator": "XGBClassifier",
+  "params": {
+    "model__colsample_bytree": 0.6066351315711425,
+    "model__gamma": 2.560465291496405,
+    "model__learning_rate": 0.02160537077027906,
+    "model__max_depth": 6,
+    "model__min_child_weight": 9,
+    "model__n_estimators": 516,
+    "model__subsample": 0.759028808435009,
+    "sampler__k_neighbors": 9
+  },
+  "threshold": 0.34,
+  "risk_bands": {
+    "low": "< 0.3",
+    "medium": "0.3 \u2013 0.6",
+    "high": "> 0.6"
+  },
+  "test_metrics": {
+    "roc_auc": 0.8671,
+    "pr_auc": 0.7179,
+    "brier": 0.0993,
+    "accuracy": 0.852,
+    "precision": 0.6294,
+    "recall": 0.6634,
+    "f1": 0.6459
+  },
+  "cv_metrics": {
+    "pr_auc": 0.6976,
+    "roc_auc": 0.8644
+  },
+  "input_features": [
+    "CreditScore",
+    "Geography",
+    "Gender",
+    "Age",
+    "Tenure",
+    "Balance",
+    "NumOfProducts",
+    "HasCrCard",
+    "IsActiveMember",
+    "EstimatedSalary"
+  ],
+  "model_features": [
+    "CreditScore",
+    "Age",
+    "Tenure",
+    "Balance",
+    "NumOfProducts",
+    "EstimatedSalary",
+    "TenureByAge",
+    "CreditScoreGivenAge",
+    "ProductsPerTenure",
+    "BalanceSalaryRatio",
+    "Geography_France",
+    "Geography_Germany",
+    "Geography_Spain",
+    "AgeGroup_18-29",
+    "AgeGroup_30-39",
+    "AgeGroup_40-49",
+    "AgeGroup_50-59",
+    "AgeGroup_60+",
+    "Gender",
+    "HasCrCard",
+    "IsActiveMember",
+    "BalanceZero",
+    "IsSenior"
+  ],
+  "n_train": 8000,
+  "random_state": 42,
+  "trained_at": "2026-10-01T12:13:34+00:00",
+  "python": "3.13.8",
+  "library_versions": {
+    "scikit-learn": "1.9.1",
+    "imbalanced-learn": "0.14.2",
+    "xgboost": "3.4.1",
+    "lightgbm": "4.7.0",
+    "pandas": "3.0.6",
+    "numpy": "2.5.3",
+    "shap": "0.52.0",
+    "joblib": "1.6.0"
+  }
+}

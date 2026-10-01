@@ -1,0 +1,11 @@
+feature,importance_mean,importance_std
+NumOfProducts,0.2762,0.0142
+Age,0.2592,0.017
+IsActiveMember,0.0914,0.0129
+Balance,0.0481,0.0075
+Geography,0.0446,0.0041
+Gender,0.0138,0.002
+EstimatedSalary,0.0062,0.0025
+Tenure,0.0029,0.0016
+HasCrCard,0.0012,0.001
+CreditScore,-0.002,0.0016

@@ -43,6 +43,16 @@ FEATURE_COLS = [
 ]
 
 # ------------------------------------------------------- risk banding
-# Low < LOW_RISK_MAX <= Medium < MEDIUM_RISK_MAX <= High
+# Low: p < LOW_RISK_MAX | Medium: LOW_RISK_MAX <= p <= MEDIUM_RISK_MAX | High: p > MEDIUM_RISK_MAX
 LOW_RISK_MAX = 0.3
 MEDIUM_RISK_MAX = 0.6
+
+# ------------------------------------------------------- model artifacts
+PIPELINE_PATH = MODELS_DIR / "churn_pipeline.joblib"
+METADATA_PATH = MODELS_DIR / "metadata.json"
+THRESHOLD_PATH = MODELS_DIR / "threshold.json"
+FINAL_METRICS_PATH = REPORTS_DIR / "final_metrics.json"
+
+# Business cost assumption: missing a churner costs 5x a false alarm.
+COST_FN = 5.0
+COST_FP = 1.0

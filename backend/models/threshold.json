@@ -1,0 +1,9 @@
+{
+  "threshold": 0.34,
+  "selected_by": "F1-optimal on out-of-fold train predictions",
+  "alternatives": {
+    "f1_optimal": 0.34,
+    "recall_0.75": 0.22,
+    "cost_optimal": 0.17
+  }
+}
