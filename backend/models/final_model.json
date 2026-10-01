@@ -1,0 +1,16 @@
+{
+  "model": "XGBoost",
+  "type": "single",
+  "strategy": "smote",
+  "params_key": "XGBoost|smote",
+  "ensemble_members": null,
+  "cv_pr_auc": 0.6976,
+  "cv_recall": 0.5043,
+  "cv_roc_auc": 0.8644,
+  "best_single": "XGBoost",
+  "best_single_pr_auc": 0.6976,
+  "best_ensemble": "Stacking",
+  "best_ensemble_pr_auc": 0.6993,
+  "ensemble_gain": 0.0017,
+  "rule": "ensemble kept only if it beats the best single model by > 0.005 PR-AUC"
+}

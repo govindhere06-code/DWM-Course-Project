@@ -76,7 +76,7 @@ def _apply_style() -> None:
 _apply_style()
 
 
-def _save(fig: plt.Figure, name: str) -> plt.Figure:
+def save_figure(fig: plt.Figure, name: str) -> plt.Figure:
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(FIGURES_DIR / f"{name}.png", dpi=DPI)
     return fig
@@ -137,7 +137,7 @@ def plot_target_distribution(df: pd.DataFrame) -> plt.Figure:
     ax.set_ylabel("Customers")
     ax.set_title("Target distribution — Exited")
     ax.grid(axis="x", visible=False)
-    return _save(fig, "target_distribution")
+    return save_figure(fig, "target_distribution")
 
 
 def plot_continuous_distribution(df: pd.DataFrame, col: str) -> plt.Figure:
@@ -156,7 +156,7 @@ def plot_continuous_distribution(df: pd.DataFrame, col: str) -> plt.Figure:
                 ax=ax_b)
     ax_b.set_title(f"{col} — boxplot")
     fig.tight_layout()
-    return _save(fig, f"distribution_{col.lower()}")
+    return save_figure(fig, f"distribution_{col.lower()}")
 
 
 def plot_categorical_counts(df: pd.DataFrame) -> plt.Figure:
@@ -175,7 +175,7 @@ def plot_categorical_counts(df: pd.DataFrame) -> plt.Figure:
         ax.grid(axis="x", visible=False)
     fig.suptitle("Categorical & discrete feature counts", fontweight="bold")
     fig.tight_layout()
-    return _save(fig, "categorical_counts")
+    return save_figure(fig, "categorical_counts")
 
 
 def outlier_report(df: pd.DataFrame, save: bool = True) -> pd.DataFrame:
@@ -228,7 +228,7 @@ def plot_churn_rate_by_category(df: pd.DataFrame) -> plt.Figure:
     fig.suptitle(f"Churn rate by feature (dashed line = overall {overall:.1f}%)",
                  fontweight="bold")
     fig.tight_layout()
-    return _save(fig, "churn_rate_by_category")
+    return save_figure(fig, "churn_rate_by_category")
 
 
 def plot_continuous_vs_churn(df: pd.DataFrame) -> plt.Figure:
@@ -251,7 +251,7 @@ def plot_continuous_vs_churn(df: pd.DataFrame) -> plt.Figure:
         ax_v.set_title(f"{col} — violin by churn")
         ax_v.set_xlabel("")
     fig.tight_layout()
-    return _save(fig, "continuous_vs_churn")
+    return save_figure(fig, "continuous_vs_churn")
 
 
 def plot_age_band_churn(df: pd.DataFrame) -> plt.Figure:
@@ -261,7 +261,7 @@ def plot_age_band_churn(df: pd.DataFrame) -> plt.Figure:
     fig, ax = plt.subplots(figsize=(8, 4.8))
     _churn_rate_bars(ax, table, overall, "Churn rate by age band")
     ax.set_xlabel("Age band")
-    return _save(fig, "churn_rate_by_age_band")
+    return save_figure(fig, "churn_rate_by_age_band")
 
 
 def plot_balance_zero_churn(df: pd.DataFrame) -> plt.Figure:
@@ -272,7 +272,7 @@ def plot_balance_zero_churn(df: pd.DataFrame) -> plt.Figure:
     table = churn_rate_table(labelled, "BalanceGroup")
     fig, ax = plt.subplots(figsize=(6, 4.8))
     _churn_rate_bars(ax, table, overall, "Churn rate: zero vs non-zero balance")
-    return _save(fig, "churn_rate_balance_zero")
+    return save_figure(fig, "churn_rate_balance_zero")
 
 
 def statistical_tests(df: pd.DataFrame, alpha: float = 0.05,
@@ -321,7 +321,7 @@ def plot_correlation_heatmap(df: pd.DataFrame) -> plt.Figure:
                 cbar_kws={"shrink": 0.75, "label": "Pearson r"}, ax=ax)
     ax.grid(False)
     ax.set_title("Correlation heatmap — numeric features + Exited")
-    return _save(fig, "correlation_heatmap")
+    return save_figure(fig, "correlation_heatmap")
 
 
 def plot_churn_heatmap(df: pd.DataFrame, row: str, col: str) -> plt.Figure:
@@ -336,7 +336,7 @@ def plot_churn_heatmap(df: pd.DataFrame, row: str, col: str) -> plt.Figure:
                 vmax=100, linewidths=2, linecolor="white",
                 cbar_kws={"label": "Churn rate (%)"}, ax=ax)
     ax.set_title(f"Churn rate — {row} × {col}")
-    return _save(fig, f"churn_heatmap_{row.lower()}_x_{col.lower()}")
+    return save_figure(fig, f"churn_heatmap_{row.lower()}_x_{col.lower()}")
 
 
 def plot_pairplot(df: pd.DataFrame, n: int = 2000) -> sns.PairGrid:
@@ -353,7 +353,7 @@ def plot_pairplot(df: pd.DataFrame, n: int = 2000) -> sns.PairGrid:
     )
     grid.figure.suptitle(f"Pairplot of continuous features (sample of {len(sample):,})",
                          y=1.02, fontweight="bold")
-    _save(grid.figure, "pairplot_continuous")
+    save_figure(grid.figure, "pairplot_continuous")
     return grid
 
 
